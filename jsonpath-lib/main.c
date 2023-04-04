@@ -9,8 +9,11 @@
 #include "utils/memutils.h"
 #include "utils/elog.h"
 
-// Linker complains about this symbol if it's not declared
+// Linker complains about these symbol if not declared
 const char *progname = "my_app_name";
+void json_errdetail() {}
+void unicode_is_normalized_quickcheck() {}
+void pg_log_generic() {}
 
 // Determine the type of the jsonpath expression item
 const char *json_path_item_type_to_string(JsonPathItemType type)
