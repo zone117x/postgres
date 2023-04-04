@@ -1,13 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "cJSON.h"
 
-#include "c.h"
-#include "postgres.h"
-#include "fmgr.h"
-#include "utils/jsonpath.h"
-#include "utils/numeric.h"
-#include "utils/memutils.h"
-#include "utils/elog.h"
+// #include "c.h"
+// #include "postgres.h"
+// #include "fmgr.h"
+// #include "utils/jsonpath.h"
+// #include "utils/numeric.h"
+// #include "utils/memutils.h"
+// #include "utils/elog.h"
+
+// new
+#include "jsonpath.h"
 
 // Linker complains about these symbol if not declared
 const char *progname = "my_app_name";
@@ -105,8 +111,8 @@ const char *json_path_item_type_to_string(JsonPathItemType type)
 	case jpiLikeRegex:
 		return "like_regex";
 	default:
-		elog(ERROR, "unrecognized jsonpath item type: %d", type);
-		exit(1);
+		fprintf(stderr, "unrecognized jsonpath item type: %d\n", type);
+		return "unknown";
 	}
 }
 
@@ -146,9 +152,10 @@ cJSON *json_path_parse_item_to_json(JsonPathParseItem *item)
 
 		case jpiNumeric:
 		{
-			char *num_str = numeric_normalize(item->value.numeric);
-			cJSON_AddStringToObject(json_item, "value", num_str);
-			pfree(num_str);
+			// char *num_str = numeric_normalize(item->value.numeric);
+			// cJSON_AddStringToObject(json_item, "value", num_str);
+			// pfree(num_str);
+			cJSON_AddNumberToObject(json_item, "value", item->value.numeric);
 		}
 		break;
 
@@ -210,7 +217,7 @@ cJSON *json_path_parse_item_to_json(JsonPathParseItem *item)
 			break;
 
 		default:
-			elog(ERROR, "unrecognized jsonpath item type: %d", item->type);
+			fprintf(stderr, "unrecognized jsonpath item type: %d\n", item->type);
 			exit(1);
 		}
 
@@ -260,9 +267,10 @@ cJSON *json_path_parse_item_to_json2(JsonPathParseItem *item)
 
 	case jpiNumeric:
 	{
-		char *num_str = numeric_normalize(item->value.numeric);
-		cJSON_AddStringToObject(json_item, "value", num_str);
-		pfree(num_str);
+		// char *num_str = numeric_normalize(item->value.numeric);
+		// cJSON_AddStringToObject(json_item, "value", num_str);
+		// pfree(num_str);
+		cJSON_AddNumberToObject(json_item, "value", item->value.numeric);
 	}
 	break;
 
@@ -324,7 +332,7 @@ cJSON *json_path_parse_item_to_json2(JsonPathParseItem *item)
 		break;
 
 	default:
-		elog(ERROR, "unrecognized jsonpath item type: %d", item->type);
+		fprintf(stderr, "unrecognized jsonpath item type: %d\n", item->type);
 		exit(1);
 	}
 
@@ -336,6 +344,12 @@ cJSON *json_path_parse_item_to_json2(JsonPathParseItem *item)
 	return json_item;
 }
 
+JsonPathParseResult *get_jsonpath_parse_result(const char *input) {
+    int len = strlen(input);
+    JsonPathParseResult *result = parsejsonpath(input, len, NULL);
+    return result;
+}
+
 // Create main entry function
 int main(int argc, char *argv[])
 {
@@ -345,21 +359,14 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	// Set up a minimal PostgreSQL environment
-	MemoryContextInit();
-
-	// Set the CurrentMemoryContext to the top-level memory context
-	CurrentMemoryContext = TopMemoryContext;
-
 	const char *input = argv[1];
 
-	int len = strlen(input);
-	JsonPathParseResult *result = parsejsonpath(input, len, NULL);
+    JsonPathParseResult *result = get_jsonpath_parse_result(input);
 
-	if (!result)
+    if (!result)
 	{
 		// Handle parsing error here, write error message to stderr
-		elog(ERROR, "Failed to parse jsonpath expression: %s", input);
+		fprintf(stderr, "Failed to parse jsonpath expression: %s\n", input);
 		exit(1);
 	}
 
