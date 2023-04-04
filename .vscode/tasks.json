@@ -3,10 +3,10 @@
   "tasks": [
     {
       "label": "build",
-      "command": "make clean && make",
+      "command": "cmake .. && make clean && make",
       "type": "shell",
       "options": {
-        "cwd": "${workspaceFolder}/jsonpath-lib"
+        "cwd": "${workspaceFolder}/build"
       }
     }
   ]
