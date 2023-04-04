@@ -65,6 +65,14 @@ ifneq ($(PORTNAME), cygwin)
 ifneq ($(PORTNAME), win32)
 ifneq ($(PORTNAME), aix)
 
+OBJS_LIB = \
+	$(LOCALOBJS) \
+	$(SUBDIROBJS)
+
+libpostgres.a: $(OBJS_LIB)
+	rm -f $@
+	$(AR) $(AROPT) $@ $(call expand_subsys,$^)
+
 postgres: $(OBJS)
 	$(CC) $(CFLAGS) $(call expand_subsys,$^) $(LDFLAGS) $(LIBS) -o $@
 
