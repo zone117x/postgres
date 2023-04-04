@@ -110,12 +110,125 @@ const char *json_path_item_type_to_string(JsonPathItemType type)
 // Convert jsonpath expression item to an AST in JSON format
 cJSON *json_path_parse_item_to_json(JsonPathParseItem *item)
 {
-    cJSON *json_item;
-    if (!item) {
-        return NULL;
-    }
+	cJSON *array = cJSON_CreateArray();
 
-    json_item = cJSON_CreateObject();
+	while (item)
+	{
+		cJSON *json_item = cJSON_CreateObject();
+		cJSON_AddStringToObject(json_item, "type", json_path_item_type_to_string(item->type));
+
+		switch (item->type)
+		{
+		case jpiNull:
+		case jpiRoot:
+		case jpiAnyArray:
+		case jpiAnyKey:
+		case jpiCurrent:
+		case jpiLast:
+		case jpiType:
+		case jpiSize:
+		case jpiAbs:
+		case jpiFloor:
+		case jpiCeiling:
+		case jpiDouble:
+		case jpiKeyValue:
+			// No additional properties needed for these types
+			break;
+
+		case jpiString:
+		case jpiVariable:
+		case jpiKey:
+			cJSON_AddStringToObject(json_item, "value", item->value.string.val);
+			break;
+
+		case jpiNumeric:
+		{
+			char *num_str = numeric_normalize(item->value.numeric);
+			cJSON_AddStringToObject(json_item, "value", num_str);
+			pfree(num_str);
+		}
+		break;
+
+		case jpiBool:
+			cJSON_AddBoolToObject(json_item, "value", item->value.boolean);
+			break;
+
+		case jpiAnd:
+		case jpiOr:
+		case jpiEqual:
+		case jpiNotEqual:
+		case jpiLess:
+		case jpiGreater:
+		case jpiLessOrEqual:
+		case jpiGreaterOrEqual:
+		case jpiAdd:
+		case jpiSub:
+		case jpiMul:
+		case jpiDiv:
+		case jpiMod:
+		case jpiStartsWith:
+			cJSON_AddItemToObject(json_item, "left", json_path_parse_item_to_json(item->value.args.left));
+			cJSON_AddItemToObject(json_item, "right", json_path_parse_item_to_json(item->value.args.right));
+			break;
+
+		case jpiLikeRegex:
+			cJSON_AddStringToObject(json_item, "pattern", item->value.like_regex.pattern);
+			cJSON_AddItemToObject(json_item, "expr", json_path_parse_item_to_json(item->value.like_regex.expr));
+			cJSON_AddNumberToObject(json_item, "flags", item->value.like_regex.flags);
+			break;
+
+		case jpiFilter:
+		case jpiIsUnknown:
+		case jpiNot:
+		case jpiPlus:
+		case jpiMinus:
+		case jpiExists:
+		case jpiDatetime:
+			cJSON_AddItemToObject(json_item, "arg", json_path_parse_item_to_json(item->value.arg));
+			break;
+
+		case jpiIndexArray:
+		{
+			cJSON *elems = cJSON_CreateArray();
+			for (int i = 0; i < item->value.array.nelems; i++)
+			{
+				cJSON *elem = cJSON_CreateObject();
+				cJSON_AddItemToObject(elem, "from", json_path_parse_item_to_json(item->value.array.elems[i].from));
+				cJSON_AddItemToObject(elem, "to", json_path_parse_item_to_json(item->value.array.elems[i].to));
+				cJSON_AddItemToArray(elems, elem);
+			}
+			cJSON_AddItemToObject(json_item, "elems", elems);
+		}
+		break;
+
+		case jpiAny:
+			cJSON_AddNumberToObject(json_item, "first", item->value.anybounds.first);
+			cJSON_AddNumberToObject(json_item, "last", item->value.anybounds.last);
+			break;
+
+		default:
+			elog(ERROR, "unrecognized jsonpath item type: %d", item->type);
+			exit(1);
+		}
+
+		cJSON_AddItemToArray(array, json_item);
+
+		item = item->next;
+	}
+
+	return array;
+}
+
+// Convert jsonpath expression item to an AST in JSON format
+cJSON *json_path_parse_item_to_json2(JsonPathParseItem *item)
+{
+	cJSON *json_item;
+	if (!item)
+	{
+		return cJSON_CreateNull();
+	}
+
+	json_item = cJSON_CreateObject();
 	cJSON_AddStringToObject(json_item, "type", json_path_item_type_to_string(item->type));
 
 	switch (item->type)

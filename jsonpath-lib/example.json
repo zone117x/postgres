@@ -1,0 +1,101 @@
+{
+  "expr": [
+    {
+      "type": "$"
+    },
+    {
+      "type": ".key",
+      "value": "asdf"
+    },
+    {
+      "type": "[subscript]",
+      "elems": [
+        {
+          "from": [
+            {
+              "type": "numeric",
+              "value": "1"
+            }
+          ],
+          "to": [
+            {
+              "type": "last"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": ".**",
+      "first": 0,
+      "last": 4294967295
+    },
+    {
+      "type": ".key",
+      "value": "thing"
+    },
+    {
+      "type": "double"
+    },
+    {
+      "type": "?",
+      "arg": [
+        {
+          "type": "==",
+          "left": [
+            {
+              "type": "-",
+              "left": [
+                {
+                  "type": "@"
+                },
+                {
+                  "type": ".key",
+                  "value": "leaf"
+                },
+                {
+                  "type": "[subscript]",
+                  "elems": [
+                    {
+                      "from": [
+                        {
+                          "type": "numeric",
+                          "value": "7"
+                        }
+                      ],
+                      "to": []
+                    }
+                  ]
+                }
+              ],
+              "right": [
+                {
+                  "type": "numeric",
+                  "value": "12345"
+                }
+              ]
+            }
+          ],
+          "right": [
+            {
+              "type": "%",
+              "left": [
+                {
+                  "type": "numeric",
+                  "value": "1"
+                }
+              ],
+              "right": [
+                {
+                  "type": "numeric",
+                  "value": "9"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lax": true
+}
